@@ -324,6 +324,9 @@ def read_langs(file_name, gating_dict, SLOTS, dataset, lang, mem_lang, sequicity
             mem_lang.index_words("t{}".format(time_i), 'utter')
 
     print("domain_counter", domain_counter)
+    if args['strict_omit']:
+        print('NOTE! strict_omit is on, so the domain counter is misleading.')
+        pritn('Turns are only included from dialogs in the counter if the turn is in an allowed domain.')
     return data, max_resp_len, slot_temp
 
 
@@ -338,9 +341,14 @@ def get_seq(pairs, lang, mem_lang, batch_size, type, sequicity):
         data_info[k] = []
 
     for pair in pairs:
-        for k in data_keys:
-            data_info[k].append(pair[k]) 
-
+        if args['strict_omit'] and pair['turn_domain'] not in args['allowed_domains']: 
+            continue
+        else:
+            for k in data_keys:
+                data_info[k].append(pair[k]) 
+#     import pdb; pdb.set_trace()
+    
+    
     dataset = Dataset(data_info, lang.word2index, lang.word2index, sequicity, mem_lang.word2index)
 
     if args["imbalance_sampler"] and type:
@@ -386,7 +394,11 @@ def prepare_data_seq(training, task="dst", sequicity=0, batch_size=100):
     if args['path']:
         folder_name = args['path'].rsplit('/', 2)[0] + '/'
     else:
-        folder_name = 'save/{}-'.format(args["decoder"])+args["addName"]+args['dataset']+str(args['task'])+'/'
+        if args['seed'] > -1:
+            pref = 'save/seed_%s/' % args['seed']
+            folder_name = pref+'{}-'.format(args["decoder"])+args["addName"]+args['dataset']+str(args['task'])+'/'
+        else:
+            folder_name = 'save/{}-'.format(args["decoder"])+args["addName"]+args['dataset']+str(args['task'])+'/'
     print("folder_name", folder_name)
     if not os.path.exists(folder_name): 
         os.makedirs(folder_name)

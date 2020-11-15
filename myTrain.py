@@ -4,6 +4,12 @@ import torch.nn as nn
 from utils.config import *
 from models.TRADE import *
 
+import utils.extra_utils as extra_utils
+
+if args['seed'] > -1:
+    extra_utils.set_seed(args['seed'])
+    args['model_name'] = 'base'
+
 '''
 python myTrain.py -dec= -bsz= -hdd= -dr= -lr=
 '''
@@ -17,6 +23,10 @@ else:
     print("You need to provide the --dataset information")
     exit(1)
 
+
+if args['strict_omit']:
+    args['allowed_domains'] = [x for x in EXPERIMENT_DOMAINS if x != except_domain]
+    
 # Configure models and load data
 avg_best, cnt, acc = 0.0, 0, 0.0
 train, dev, test, test_special, lang, SLOTS_LIST, gating_dict, max_word = prepare_data_seq(True, args['task'], False, batch_size=int(args['batch']))

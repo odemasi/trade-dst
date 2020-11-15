@@ -65,6 +65,10 @@ parser.add_argument("--strict_domain", action="store_true")
 parser.add_argument('-exceptd','--except_domain', help='', required=False, default="", type=str)
 parser.add_argument('-onlyd','--only_domain', help='', required=False, default="", type=str)
 
+parser.add_argument('--max_patience', default=6, required=False, type=int)
+parser.add_argument('--approach', default="", required=False, type=str)
+parser.add_argument('--seed', default=-1, required=False, type=int)
+parser.add_argument('--strict_omit', action="store_true")
 
 args = vars(parser.parse_args())
 if args["load_embedding"]:
@@ -76,6 +80,8 @@ if args["except_domain"] != "":
     args["addName"] += "Except"+args["except_domain"]
 if args["only_domain"] != "":
     args["addName"] += "Only"+args["only_domain"]
+if args['strict_omit']:
+    args['addName'] += 'Strict'
 
 print(str(args))
 

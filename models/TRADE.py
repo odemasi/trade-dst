@@ -72,6 +72,13 @@ class TRADE(nn.Module):
     
     def save_model(self, dec_type):
         directory = 'save/TRADE-'+args["addName"]+args['dataset']+str(self.task)+'/'+'HDD'+str(self.hidden_size)+'BSZ'+str(args['batch'])+'DR'+str(self.dropout)+str(dec_type)                 
+        if args['seed'] > -1:
+            dir_names = directory.split('/')
+            directory = '/'.join([dir_names[0], 'seed_%s' % args['seed']] + dir_names[1:])
+            best_model = dir_names[-1]
+            with open('/'.join([dir_names[0], 'seed_%s' % args['seed'], dir_names[1]]) + '/best_%s_model.txt' % args['model_name'], 'w') as f:
+                f.write(best_model)
+            
         if not os.path.exists(directory):
             os.makedirs(directory)
         torch.save(self.encoder, directory + '/enc.th')
@@ -143,7 +150,7 @@ class TRADE(nn.Module):
             use_teacher_forcing, slot_temp) 
         return all_point_outputs, all_gate_outputs, words_point_out, words_class_out
 
-    def evaluate(self, dev, matric_best, slot_temp, early_stop=None):
+    def evaluate(self, dev, matric_best, slot_temp, early_stop=None, return_all=False):
         # Set to not-training mode to disable dropout
         self.encoder.train(False)
         self.decoder.train(False)  
@@ -224,7 +231,10 @@ class TRADE(nn.Module):
             if (joint_acc_score >= matric_best):
                 self.save_model('ACC-{:.4f}'.format(joint_acc_score))
                 print("MODEL SAVED")
-            return joint_acc_score
+            if return_all:
+                return evaluation_metrics
+            else:
+                return joint_acc_score
 
     def evaluate_metrics(self, all_prediction, from_which, slot_temp):
         total, turn_acc, joint_acc, F1_pred, F1_count = 0, 0, 0, 0, 0
